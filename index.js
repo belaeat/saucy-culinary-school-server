@@ -30,7 +30,19 @@ async function run() {
 
         const cartCollection = client.db("saucyDb").collection("cart")
 
-        // inserting document to the cartCollection
+        // cartCollection api's
+        app.get('/carts', async (req, res) => {
+            const email = req.query.email;
+            if (!email) {
+                res.send([])
+            }
+            const query = { email: email }
+            // console.log(email)
+            const result = await cartCollection.find(query).toArray()
+            res.send(result)
+        })
+
+
         app.post('/carts', async (req, res) => {
             const item = req.body
             console.log(item)
