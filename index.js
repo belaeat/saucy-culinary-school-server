@@ -28,7 +28,21 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        const classesCollection = client.db("saucyDb").collection("classes")
+        const instructorsCollection = client.db("saucyDb").collection("instructors")
         const cartCollection = client.db("saucyDb").collection("cart")
+
+        // classes API
+        app.get('/classes', async (req, res) => {
+            const result = await classesCollection.find().toArray()
+            res.send(result)
+        })
+
+        // instructors API
+        app.get('/instructors', async (req, res) => {
+            const result = await instructorsCollection.find().toArray()
+            res.send(result)
+        })
 
         // cartCollection api's
         app.get('/carts', async (req, res) => {
