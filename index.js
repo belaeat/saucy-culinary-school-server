@@ -32,6 +32,19 @@ async function run() {
         const instructorsCollection = client.db("saucyDb").collection("instructors")
         const cartCollection = client.db("saucyDb").collection("cart")
 
+        // popular classes API
+        app.get('/popularClasses', async (req, res) => {
+            const query = {};
+            const options = {
+                sort: { students: -1 },
+            };
+
+            const limit = parseInt(req.query.limit) || 6;  
+            const skip = parseInt(req.query.skip) || 0;
+            const result = await classesCollection.find(query, options).limit(limit).skip(skip).toArray()
+            res.send(result)
+        })
+
         // classes API
         app.get('/classes', async (req, res) => {
             const result = await classesCollection.find().toArray()
