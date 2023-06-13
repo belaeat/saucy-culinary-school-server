@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express()
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 
@@ -33,11 +34,46 @@ async function run() {
         const instructorsCollection = client.db("saucyDb").collection("instructors")
         const cartCollection = client.db("saucyDb").collection("cart")
 
+        // JWT
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ token })
+        })
+
         // users API's
+        app.get('/users', async (req, res) => {
+            const result = await usersCollection.find().toArray()
+            res.send(result)
+        })
+
         app.post('/users', async (req, res) => {
             const user = req.body;
-            const result = await usersCollection.insertOne(user);
-            res.send(result);
+            console.log(user);
+            const query = { email: user.email }
+            const existingUser = await usersCollection.findOne(query)
+            console.log("existing user", existingUser);
+            if (existingUser) {
+                return res.send({ message: 'User already exist!' })
+            }
+            else {
+                const result = await usersCollection.insertOne(user);
+                res.send(result);
+            }
+
+        })
+
+        // make admin API
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc)
+            res.send(result)
         })
 
         // popular classes API
