@@ -28,9 +28,17 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        const usersCollection = client.db("saucyDb").collection("users")
         const classesCollection = client.db("saucyDb").collection("classes")
         const instructorsCollection = client.db("saucyDb").collection("instructors")
         const cartCollection = client.db("saucyDb").collection("cart")
+
+        // users API's
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+        })
 
         // popular classes API
         app.get('/popularClasses', async (req, res) => {
@@ -39,7 +47,7 @@ async function run() {
                 sort: { students: -1 },
             };
 
-            const limit = parseInt(req.query.limit) || 6;  
+            const limit = parseInt(req.query.limit) || 6;
             const skip = parseInt(req.query.skip) || 0;
             const result = await classesCollection.find(query, options).limit(limit).skip(skip).toArray()
             res.send(result)
@@ -52,7 +60,7 @@ async function run() {
                 sort: { students: -1 },
             };
 
-            const limit = parseInt(req.query.limit) || 6;  
+            const limit = parseInt(req.query.limit) || 6;
             const skip = parseInt(req.query.skip) || 0;
             const result = await instructorsCollection.find(query, options).limit(limit).skip(skip).toArray()
             res.send(result)
@@ -83,9 +91,9 @@ async function run() {
         })
 
         // cart item delete API
-        app.delete('/carts/:id', async (req, res) =>{
+        app.delete('/carts/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await cartCollection.deleteOne(query)
             res.send(result)
         })
