@@ -52,6 +52,17 @@ async function run() {
             next();
         }
 
+        // verify instructor middleware
+        const verifyInstructor = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+            if (user?.role !== 'instructor') {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            next();
+        }
+
         // verify JWT
         const verifyJWT = (req, res, next) => {
             const authorization = req.headers.authorization;
@@ -72,6 +83,10 @@ async function run() {
 
         // users API's
         app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
+            const result = await usersCollection.find().toArray()
+            res.send(result)
+        })
+        app.get('/users', verifyJWT, verifyInstructor, async (req, res) => {
             const result = await usersCollection.find().toArray()
             res.send(result)
         })
@@ -103,6 +118,20 @@ async function run() {
             const query = { email: email }
             const user = await usersCollection.findOne(query)
             const result = { admin: user?.role === 'admin' }
+            res.send(result)
+        })
+
+        // verify instructor
+        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+
+            if (req.decoded.email !== email) {
+                res.send({ instructor: false });
+            }
+
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+            const result = { instructor: user?.role === 'instructor' }
             res.send(result)
         })
 
@@ -146,7 +175,7 @@ async function run() {
             res.send(result)
         })
 
-        // popular classes API
+        // popular instructor API
         app.get('/popularInstructors', async (req, res) => {
             const query = {};
             const options = {
@@ -163,6 +192,13 @@ async function run() {
         app.get('/classes', async (req, res) => {
             const result = await classesCollection.find().toArray()
             res.send(result)
+        })
+
+        // inserting new class 
+        app.post('/classes', async (req, res) => {
+            const newClass = req.body;
+            const result = await classesCollection.insertOne(newClass)
+            res.send(result);
         })
 
         // instructors API
