@@ -195,7 +195,7 @@ async function run() {
         })
 
         // inserting new class 
-        app.post('/classes', async (req, res) => {
+        app.post('/classes', verifyJWT, verifyInstructor, async (req, res) => {
             const newClass = req.body;
             const result = await classesCollection.insertOne(newClass)
             res.send(result);
