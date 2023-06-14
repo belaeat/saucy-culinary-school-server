@@ -41,6 +41,24 @@ async function run() {
             res.send({ token })
         })
 
+        // verify JWT
+        const verifyJWT = (req, res, next) => {
+            const authorization = req.headers.authorization;
+            if (!authorization) {
+                return res.status(401).send({ error: true, message: 'unauthorized access' })
+            }
+            // bearer token
+            const token = authorization.split(' ')[1];
+
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ error: true, message: 'unauthorized access' })
+                }
+                req.decoded = decoded;
+                next();
+            })
+        }
+
         // users API's
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray()
@@ -129,11 +147,18 @@ async function run() {
         })
 
         // cartCollection api's
-        app.get('/carts', async (req, res) => {
+        app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
+
             if (!email) {
                 res.send([])
             }
+
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+
             const query = { email: email }
             // console.log(email)
             const result = await cartCollection.find(query).toArray()
