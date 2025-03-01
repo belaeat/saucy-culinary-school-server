@@ -6,7 +6,10 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors());
+app.use(cors()); // Allow all origins
+
+// OR allow only your frontend origin
+app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
 // mongodb connection
